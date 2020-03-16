@@ -34,7 +34,6 @@ class TftpProcessor(object):
         #                             packet_bytes[2], packet_bytes[3])
         return in_packet
 
-
     def get_next_output_packet(self):
         return self.packet_buffer.pop(0)
 
@@ -63,18 +62,15 @@ def check_file_name():
         print(f"[WARN] File name is invalid [{script_name}]")
     pass
 
-
 def setup_sockets(address):
     s_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return s_socket
-
 
 def parse_user_input(address, operation, file_name=None):
     if operation == "push":
         print(f"Attempting to upload [{file_name}]...")
     elif operation == "pull":
         print(f"Attempting to download [{file_name}]...")
-
 
 def get_arg(param_index, default=None):
     try:
@@ -147,7 +143,6 @@ def main():
         data = download_data(tftp_processor, s_socket, address)
         tftp_processor.request_file('{}/{}'.format(os.getcwd(), file_name), data)
         print('Downloading Finished')
-
     elif operation == 'push':
         initiate_connection(tftp_processor, address, file_name, 'WRQ')
         data_array = tftp_processor.upload_file(file_name)
