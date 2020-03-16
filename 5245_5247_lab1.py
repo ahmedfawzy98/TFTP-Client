@@ -208,6 +208,9 @@ def get_arg(param_index, default=None):
                 f"[FATAL] The comamnd-line argument #[{param_index}] is missing")
             exit(-1)    # Program execution failed.
 
+def write_to_file(data, file_name):
+    with open('{}/{}'.format(os.getcwd(), file_name), 'w') as f:
+        f.write(data)
 
 def main():
     """
@@ -231,25 +234,30 @@ def main():
     # Modify this as needed.
     parse_user_input(ip_address, operation, file_name)
     address = (ip_address, 69)
+    server_dir = '/home/ahmed/tftp_files/'
 
     s_socket = setup_sockets(address)
     tftp_processor = TftpProcessor()
     if operation == 'pull':
         packet_data = [1, bytes(file_name, 'ascii'), 0, bytes('octet', 'ascii'), 0]
         tftp_processor.process_udp_packet(packet_data, address) # RRQ packet
-        s_socket.sendto(tftp_processor.get_next_output_packet(), address)
-        s_socket.recvfrom(512)
+        data = ''
         while tftp_processor.has_pending_packets_to_be_sent():
             s_socket.sendto(tftp_processor.get_next_output_packet(), address)
-        data_array = tftp_processor.request_file('/home/ahmed/tftp_files/server.txt')
-        for i in range(len(data_array)): # DATA packets
-            packet_data = [3, i + 1, data_array[i]]
-            tftp_processor.process_udp_packet(packet_data, address)
+            received_packet, address = s_socket.recvfrom(512)
+            packet_data = [4, received_packet[3]]
+            for i in range(4, len(received_packet)):
+                data += chr(received_packet[i])
+            if len(received_packet) == 512:
+                tftp_processor.process_udp_packet(packet_data, address) # RRQ packet
+        write_to_file(data, file_name)
+
     elif operation == 'push':
+        # data_array = tftp_processor.request_file(server_dir.join('server.txt'))
+        # for i in range(len(data_array)): # DATA packets
+        #     packet_data = [3, i + 1, data_array[i]]
+        #     tftp_processor.process_udp_packet(packet_data, address)
         tftp_processor.upload_file(file_name)
-    
-    # while tftp_processor.has_pending_packets_to_be_sent():
-    #     s_socket.sendto(tftp_processor.get_next_output_packet(), address)
     
 
 if __name__ == "__main__":
